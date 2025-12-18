@@ -6,6 +6,10 @@ interface SudokuVisualizerProps {
   className?: string;
 }
 
+const CELL_SIZE = 32; // Fixed cell size in pixels
+const GRID_SIZE = 9;
+const GRID_DIMENSION = CELL_SIZE * GRID_SIZE;
+
 export function SudokuVisualizer({ currentStep, className }: SudokuVisualizerProps) {
   const payload = currentStep?.payload || {};
   const board = (payload.board as number[][]) || Array(9).fill(0).map(() => Array(9).fill(0));
@@ -20,57 +24,68 @@ export function SudokuVisualizer({ currentStep, className }: SudokuVisualizerPro
     const isActive = row === currentRow && col === currentCol;
     const isFixed = fixed[row]?.[col];
     
-    let baseClass = 'w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base font-mono transition-all duration-200';
-    
     // Subgrid borders
     const rightBorder = (col + 1) % 3 === 0 && col !== 8 ? 'border-r-2 border-r-primary/50' : 'border-r border-r-border/50';
     const bottomBorder = (row + 1) % 3 === 0 && row !== 8 ? 'border-b-2 border-b-primary/50' : 'border-b border-b-border/50';
     
-    baseClass += ` ${rightBorder} ${bottomBorder}`;
+    let stateClass = 'bg-background/50 text-primary';
 
     if (isActive) {
       if (kind === 'backtrack') {
-        return `${baseClass} bg-destructive/30 text-destructive-foreground ring-2 ring-destructive animate-pulse`;
+        stateClass = 'bg-destructive/30 text-destructive-foreground ring-2 ring-inset ring-destructive';
+      } else if (kind === 'check-valid' && isValid === false) {
+        stateClass = 'bg-destructive/20 text-destructive ring-2 ring-inset ring-destructive';
+      } else if (kind === 'place-number' || (kind === 'check-valid' && isValid === true)) {
+        stateClass = 'bg-success/30 text-success ring-2 ring-inset ring-success';
+      } else {
+        stateClass = 'bg-secondary/30 ring-2 ring-inset ring-secondary';
       }
-      if (kind === 'check-valid' && isValid === false) {
-        return `${baseClass} bg-destructive/20 text-destructive ring-2 ring-destructive`;
-      }
-      if (kind === 'place-number' || (kind === 'check-valid' && isValid === true)) {
-        return `${baseClass} bg-success/30 text-success ring-2 ring-success`;
-      }
-      return `${baseClass} bg-secondary/30 ring-2 ring-secondary`;
+    } else if (isFixed) {
+      stateClass = 'bg-muted/50 text-foreground font-bold';
     }
     
-    if (isFixed) {
-      return `${baseClass} bg-muted/50 text-foreground font-bold`;
-    }
-    
-    return `${baseClass} bg-background/50 text-primary`;
+    return cn(
+      'flex items-center justify-center text-sm font-mono transition-colors duration-150',
+      rightBorder,
+      bottomBorder,
+      stateClass
+    );
   };
 
   return (
-    <div className={cn('glass-panel p-4', className)}>
+    <div className={cn('glass-panel p-4 overflow-hidden', className)}>
       <div className="flex flex-col items-center justify-center h-full">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">Sudoku Grid</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Sudoku Grid</h3>
         
-        <div className="border-2 border-primary/50 rounded-lg overflow-hidden bg-background/30">
-          {board.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex">
-              {row.map((cell, colIdx) => (
+        {/* Fixed-size container */}
+        <div 
+          className="border-2 border-primary/50 rounded-lg overflow-hidden bg-background/30 flex-shrink-0"
+          style={{ width: GRID_DIMENSION + 4, height: GRID_DIMENSION + 4 }}
+        >
+          <div 
+            className="grid"
+            style={{ 
+              gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
+              gridTemplateRows: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
+            }}
+          >
+            {board.map((row, rowIdx) =>
+              row.map((cell, colIdx) => (
                 <div
-                  key={colIdx}
+                  key={`${rowIdx}-${colIdx}`}
                   className={getCellClass(rowIdx, colIdx)}
+                  style={{ width: CELL_SIZE, height: CELL_SIZE }}
                 >
                   {cell !== 0 ? cell : ''}
                 </div>
-              ))}
-            </div>
-          ))}
+              ))
+            )}
+          </div>
         </div>
 
         {/* Status panel */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-3 text-center min-h-[40px]">
+          <p className="text-sm text-muted-foreground line-clamp-2">
             {currentStep?.description || 'Ready to solve'}
           </p>
           {tryingNum !== undefined && currentRow !== undefined && (
@@ -81,21 +96,21 @@ export function SudokuVisualizer({ currentStep, className }: SudokuVisualizerPro
         </div>
 
         {/* Legend */}
-        <div className="flex gap-4 mt-4 text-xs">
+        <div className="flex gap-4 mt-3 text-xs flex-shrink-0">
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-muted/50 rounded" />
+            <div className="w-3 h-3 bg-muted/50 rounded" />
             <span className="text-muted-foreground">Fixed</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-secondary/30 rounded ring-2 ring-secondary" />
+            <div className="w-3 h-3 bg-secondary/30 rounded ring-1 ring-secondary" />
             <span className="text-muted-foreground">Trying</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-success/30 rounded" />
+            <div className="w-3 h-3 bg-success/30 rounded" />
             <span className="text-muted-foreground">Placed</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-destructive/30 rounded" />
+            <div className="w-3 h-3 bg-destructive/30 rounded" />
             <span className="text-muted-foreground">Backtrack</span>
           </div>
         </div>

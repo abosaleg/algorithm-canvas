@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { VisualizationStep } from '@/types/algorithm';
 import { cn } from '@/lib/utils';
 
@@ -5,6 +6,8 @@ interface MazeVisualizerProps {
   currentStep: VisualizationStep | null;
   className?: string;
 }
+
+const MAX_GRID_DIMENSION = 280; // Maximum grid dimension in pixels
 
 export function MazeVisualizer({ currentStep, className }: MazeVisualizerProps) {
   const payload = currentStep?.payload || {};
@@ -17,6 +20,10 @@ export function MazeVisualizer({ currentStep, className }: MazeVisualizerProps) 
   const kind = currentStep?.kind || 'init';
   const solved = payload.solved as boolean | undefined;
 
+  // Calculate fixed cell size based on grid size
+  const cellSize = useMemo(() => Math.floor(MAX_GRID_DIMENSION / size), [size]);
+  const gridDimension = cellSize * size;
+
   const getCellClass = (row: number, col: number) => {
     const isWall = maze[row]?.[col] === 0;
     const isPath = solution[row]?.[col] === 1;
@@ -25,46 +32,38 @@ export function MazeVisualizer({ currentStep, className }: MazeVisualizerProps) 
     const isStart = row === 0 && col === 0;
     const isEnd = row === size - 1 && col === size - 1;
     
-    const cellSize = size <= 5 ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-10 h-10 sm:w-12 sm:h-12';
-    let baseClass = `${cellSize} flex items-center justify-center text-lg font-bold transition-all duration-300 border border-border/30`;
+    let stateClass = 'bg-background/50';
 
     if (isWall) {
-      return `${baseClass} bg-slate-800 dark:bg-slate-900`;
-    }
-
-    if (isCurrent) {
+      stateClass = 'bg-slate-800 dark:bg-slate-900';
+    } else if (isCurrent) {
       if (kind === 'backtrack') {
-        return `${baseClass} bg-destructive/50 ring-2 ring-destructive animate-pulse`;
+        stateClass = 'bg-destructive/50 ring-2 ring-inset ring-destructive';
+      } else if (kind === 'destination-reached') {
+        stateClass = 'bg-success ring-2 ring-inset ring-success';
+      } else {
+        stateClass = 'bg-secondary/70 ring-2 ring-inset ring-secondary';
       }
-      if (kind === 'destination-reached') {
-        return `${baseClass} bg-success ring-2 ring-success animate-pulse`;
-      }
-      return `${baseClass} bg-secondary/70 ring-2 ring-secondary`;
-    }
-
-    if (isPath) {
+    } else if (isPath) {
       if (isStart) {
-        return `${baseClass} bg-info/50 ring-2 ring-info`;
+        stateClass = 'bg-info/50 ring-2 ring-inset ring-info';
+      } else if (isEnd) {
+        stateClass = 'bg-success/50 ring-2 ring-inset ring-success';
+      } else {
+        stateClass = 'bg-primary/40';
       }
-      if (isEnd) {
-        return `${baseClass} bg-success/50 ring-2 ring-success`;
-      }
-      return `${baseClass} bg-primary/40`;
+    } else if (isVisited && !isPath) {
+      stateClass = 'bg-muted/30';
+    } else if (isStart) {
+      stateClass = 'bg-info/30';
+    } else if (isEnd) {
+      stateClass = 'bg-success/30';
     }
 
-    if (isVisited && !isPath) {
-      return `${baseClass} bg-muted/30`;
-    }
-
-    if (isStart) {
-      return `${baseClass} bg-info/30`;
-    }
-
-    if (isEnd) {
-      return `${baseClass} bg-success/30`;
-    }
-
-    return `${baseClass} bg-background/50`;
+    return cn(
+      'flex items-center justify-center text-sm font-bold transition-colors duration-150 border border-border/30',
+      stateClass
+    );
   };
 
   const getCellContent = (row: number, col: number) => {
@@ -81,28 +80,39 @@ export function MazeVisualizer({ currentStep, className }: MazeVisualizerProps) 
   };
 
   return (
-    <div className={cn('glass-panel p-4', className)}>
+    <div className={cn('glass-panel p-4 overflow-hidden', className)}>
       <div className="flex flex-col items-center justify-center h-full">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">Rat in a Maze</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Rat in a Maze ({size}×{size})</h3>
         
-        <div className="border-2 border-primary/50 rounded-lg overflow-hidden bg-background/20">
-          {Array.from({ length: size }).map((_, rowIdx) => (
-            <div key={rowIdx} className="flex">
-              {Array.from({ length: size }).map((_, colIdx) => (
+        {/* Fixed-size container */}
+        <div 
+          className="border-2 border-primary/50 rounded-lg overflow-hidden bg-background/20 flex-shrink-0"
+          style={{ width: gridDimension + 4, height: gridDimension + 4 }}
+        >
+          <div 
+            className="grid"
+            style={{ 
+              gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+              gridTemplateRows: `repeat(${size}, ${cellSize}px)`,
+            }}
+          >
+            {Array.from({ length: size }).map((_, rowIdx) =>
+              Array.from({ length: size }).map((_, colIdx) => (
                 <div
-                  key={colIdx}
+                  key={`${rowIdx}-${colIdx}`}
                   className={getCellClass(rowIdx, colIdx)}
+                  style={{ width: cellSize, height: cellSize, fontSize: cellSize > 40 ? '1rem' : '0.75rem' }}
                 >
                   {getCellContent(rowIdx, colIdx)}
                 </div>
-              ))}
-            </div>
-          ))}
+              ))
+            )}
+          </div>
         </div>
 
         {/* Status panel */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-3 text-center min-h-[40px]">
+          <p className="text-sm text-muted-foreground line-clamp-2">
             {currentStep?.description || 'Ready to find path'}
           </p>
           {kind === 'complete' && (
@@ -116,25 +126,25 @@ export function MazeVisualizer({ currentStep, className }: MazeVisualizerProps) 
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-3 mt-4 text-xs justify-center">
+        <div className="flex flex-wrap gap-3 mt-3 text-xs justify-center flex-shrink-0">
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-slate-800 rounded" />
+            <div className="w-3 h-3 bg-slate-800 rounded" />
             <span className="text-muted-foreground">Wall</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-info/50 rounded" />
+            <div className="w-3 h-3 bg-info/50 rounded" />
             <span className="text-muted-foreground">Start</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-success/50 rounded" />
+            <div className="w-3 h-3 bg-success/50 rounded" />
             <span className="text-muted-foreground">End</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-primary/40 rounded" />
+            <div className="w-3 h-3 bg-primary/40 rounded" />
             <span className="text-muted-foreground">Path</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-secondary/70 rounded" />
+            <div className="w-3 h-3 bg-secondary/70 rounded" />
             <span className="text-muted-foreground">Current</span>
           </div>
         </div>
