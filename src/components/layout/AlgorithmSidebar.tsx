@@ -27,7 +27,7 @@ const categoryIcons: Record<AlgorithmCategory, React.ComponentType<{ className?:
 export function AlgorithmSidebar({ isOpen, onClose }: AlgorithmSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['primary-Divide & Conquer', 'primary-Greedy', 'primary-Backtracking', 'sorting', 'searching'])
+    new Set(['primary-Divide & Conquer', 'primary-Greedy', 'primary-Backtracking', 'primary-Dynamic Programming', 'sorting', 'searching'])
   );
   const location = useLocation();
 
@@ -76,11 +76,17 @@ export function AlgorithmSidebar({ isOpen, onClose }: AlgorithmSidebarProps) {
       { id: 'rat-maze', name: 'Rat in a Maze' },
       { id: 'knight-tour', name: "Knight's Tour" },
     ];
+    const dynamicProgramming = [
+      { id: 'knapsack-01', name: '0/1 Knapsack' },
+      { id: 'lcs', name: 'Longest Common Subsequence' },
+      { id: 'fibonacci', name: 'Fibonacci (DP)' },
+    ];
 
     return [
       { name: 'Divide & Conquer', algorithms: divideAndConquer },
       { name: 'Greedy', algorithms: greedy },
       { name: 'Backtracking', algorithms: backtracking },
+      { name: 'Dynamic Programming', algorithms: dynamicProgramming },
     ];
   }, []);
 
@@ -226,8 +232,6 @@ export function AlgorithmSidebar({ isOpen, onClose }: AlgorithmSidebarProps) {
               {/* Other Categories */}
               {filteredCategories
                 .filter((category) => {
-                  // Exclude dynamic-programming as requested
-                  if (category.id === 'dynamic-programming') return false;
                   
                   // When searching, show all categories
                   if (searchQuery.trim()) return true;
