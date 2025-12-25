@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { VisualizationStep } from '@/types/algorithm';
+import type { VisualizationStep } from '@/types/algorithm';
 
 interface ArrayVisualizerProps {
   currentStep: VisualizationStep | null;
