@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { generateSudokuPuzzle } from '@/lib/sudoku';
 import { RealLifeUsageMaze } from './RealLifeUsageMaze';
 import { RealLifeUsageBubble } from './RealLifeUsageBubble';
+import { RealLifeUsageKnapsack } from './RealLifeUsageKnapsack';
 
 interface InputPanelProps {
   type: 'sorting' | 'searching' | 'graph' | 'nqueens' | 'fibonacci' | 'hanoi' | 'closestpair' | 'knapsack' | 'mergepattern' | 'sudoku' | 'maze' | 'knight' | 'knapsack01' | 'lcs' | 'bellmanford';
@@ -595,6 +596,20 @@ export function InputPanel({ type, onInputChange, className, algorithmId }: Inpu
             </Button>
 
             {showRealLife && <RealLifeUsageBubble />}
+          </>
+        )}
+
+        {(algorithmId === 'fractional-knapsack' || algorithmId === 'knapsack-01') && (
+          <>
+            <Button
+              onClick={() => setShowRealLife(!showRealLife)}
+              variant="outline"
+              className="w-full mt-2 border-primary/50 text-primary hover:bg-primary/10"
+            >
+              شوف الخوارزمية دي في الحياة الواقعية
+            </Button>
+
+            {showRealLife && <RealLifeUsageKnapsack />}
           </>
         )}
       </div>
