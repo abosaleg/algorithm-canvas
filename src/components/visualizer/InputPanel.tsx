@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { generateSudokuPuzzle } from '@/lib/sudoku';
+import { RealLifeUsageMaze } from './RealLifeUsageMaze';
 
 interface InputPanelProps {
   type: 'sorting' | 'searching' | 'graph' | 'nqueens' | 'fibonacci' | 'hanoi' | 'closestpair' | 'knapsack' | 'mergepattern' | 'sudoku' | 'maze' | 'knight' | 'knapsack01' | 'lcs' | 'bellmanford';
@@ -30,6 +31,7 @@ export function InputPanel({ type, onInputChange, className }: InputPanelProps) 
   const [bfEdges, setBfEdges] = useState('0-1:-1, 0-2:4, 1-2:3, 1-3:2, 1-4:2, 3-2:5, 3-1:1, 4-3:-3');
   const [bfSource, setBfSource] = useState('0');
   const [error, setError] = useState('');
+  const [showRealLife, setShowRealLife] = useState(false);
 
   const parseArray = (input: string): number[] | null => {
     try {
@@ -564,6 +566,20 @@ export function InputPanel({ type, onInputChange, className }: InputPanelProps) 
             Apply
             <ArrowRight className="h-4 w-4" />
           </Button>
+        )}
+
+        {type === 'maze' && (
+          <>
+            <Button
+              onClick={() => setShowRealLife(!showRealLife)}
+              variant="outline"
+              className="w-full mt-2 border-primary/50 text-primary hover:bg-primary/10"
+            >
+              شوف الخوارزمية دي في الحياة الواقعية
+            </Button>
+
+            {showRealLife && <RealLifeUsageMaze />}
+          </>
         )}
       </div>
     </div>
