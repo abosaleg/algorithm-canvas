@@ -16,6 +16,7 @@ export function Navbar({ onMenuToggle, showMenuButton = false, sidebarOpen = fal
 
   const navLinks = [
     { to: '/', label: 'Home' },
+    { to: '/algorithm-battle', label: 'Algorithm Battle' },
     { to: '/algorithms', label: 'Algorithms' },
     { to: '/docs', label: 'Docs' },
   ];

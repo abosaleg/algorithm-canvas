@@ -9,6 +9,7 @@ import AlgorithmVisualizer from "./pages/AlgorithmVisualizer";
 import AlgorithmsDirectory from "./pages/AlgorithmsDirectory";
 import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
+import AlgorithmBattle from "./pages/AlgorithmBattle";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/algorithms/:category" element={<AlgorithmsDirectory />} />
             <Route path="/algorithms/:category/:id" element={<AlgorithmVisualizer />} />
             <Route path="/docs" element={<Docs />} />
+            <Route path="/algorithm-battle" element={<AlgorithmBattle />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
